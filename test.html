@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Links and Titles</title>
+</head>
+
+<body>
+    <h1>Fetch Links and Titles</h1>
+    <div id="output"></div>
+
+    <script>
+        async function getAllLinks(url) {
+            const proxyUrl = 'proxy.php?url=' + encodeURIComponent(url);
+            try {
+                // Fetch the HTML of the page through the PHP proxy
+                let response = await fetch(proxyUrl);
+                let text = await response.text();
+
+                // Create a DOM parser
+                let parser = new DOMParser();
+                let doc = parser.parseFromString(text, 'text/html');
+
+                // Get the page title
+                let title = doc.querySelector('title').textContent.trim();
+
+                // Get the base URL
+                let base = new URL(url).origin;
+
+                // Get all anchor elements
+                let anchors = doc.querySelectorAll('a');
+
+                // Extract href and textContent (title) from each anchor element
+                let links = [];
+                anchors.forEach(anchor => {
+                    let href = anchor.getAttribute('href');
+                    let title = anchor.textContent.trim(); // Get the title text
+                    if (href) {
+                        links.push({ href, title });
+                    }
+                });
+
+                // Return a JSON object with links, title, and base URL
+                return {
+                    links: links,
+                    title: title,
+                    baseUrl: base
+                };
+            } catch (error) {
+                console.error('Error:', error);
+                return {
+                    links: [],
+                    title: '',
+                    baseUrl: ''
+                };
+            }
+        }
+
+        async function displayLinks() {
+            let root = "https://www.google.com"; // Change this URL as needed
+            let result = await getAllLinks(root);
+
+            // Display the results
+            let outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `
+        <h2>${result.title}</h2>
+        <p>Base URL: ${result.baseUrl}</p>
+        <ul>
+          ${result.links.map(link => `<li><a href="${link.href}" target="_blank">${link.title}</a></li>`).join('')}
+        </ul>
+      `;
+        }
+
+        displayLinks();
+    </script>
+</body>
+
+</html>

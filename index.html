@@ -1,0 +1,150 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Orb</title>
+  <script src="https://unpkg.com/@memgraph/orb@0.0.2/dist/browser/orb.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    #graph {
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="graph"></div>
+  <script>
+
+    let data = [];
+
+    function getter(root) {
+      getAllLinks(root).then(root_link => {
+        data.push({ id: data.length+1, name: root_link.title, root_url: root, url: root, connected_nodes: [] });
+        for (let i = 0; i < root_link.links.length; i++) {
+          let link = root_link.links[i];
+          data.push({ id: data[data.length - 1].id+1, name: link.title, url: link.href, connected_nodes: []});
+          let root_node = data.filter(
+            function (data) { return data.url == root }
+          );
+          root_node[0].connected_nodes.push(data[data.length - 1].id);
+        };
+        console.log(data);
+        render();
+      });
+    }
+
+    async function getAllLinks(url) {
+      const proxyUrl = 'proxy.php?url=' + encodeURIComponent(url);
+      try {
+        // Fetch the HTML of the page through the PHP proxy
+        let response = await fetch(proxyUrl);
+        let text = await response.text();
+
+        // Create a DOM parser
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(text, 'text/html');
+
+        // Get the page title
+        let title = doc.querySelector('title').textContent.trim();
+
+        // Get the base URL
+        let base = new URL(url).origin;
+
+        // Get all anchor elements
+        let anchors = doc.querySelectorAll('a');
+
+        // Extract href and textContent (title) from each anchor element
+        let links = [];
+        anchors.forEach(anchor => {
+          let href = anchor.getAttribute('href');
+          let title = anchor.textContent.trim(); // Get the title text
+          if (href) {
+            // Make href the full URL
+            let fullUrl = new URL(href, base).href;
+            links.push({ href: fullUrl, title });
+          }
+        });
+
+        // Return a JSON object with links, title, and base URL
+        return {
+          links: links,
+          title: title,
+          baseUrl: base
+        };
+      } catch (error) {
+        console.error('Error:', error);
+        return {
+          links: [],
+          title: '',
+          baseUrl: ''
+        };
+      }
+    }
+
+    // Example usage:
+    //getAllLinks('https://www.google.com').then(links => console.log(links));
+
+
+    async function render() {
+      const container = document.getElementById("graph");
+
+
+
+      const nodes = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        root_url: item.root_url,
+        url: item.url
+      }));
+
+      const edges = [];
+      data.forEach(item => {
+        item.connected_nodes.forEach(connectedId => {
+          edges.push({
+            id: `${item.id}-${connectedId}`,
+            start: item.id,
+            end: connectedId
+          });
+        });
+      });
+
+      const orb = new Orb.Orb(container);
+
+      // Initialize nodes and edges
+      orb.data.setup({ nodes, edges });
+
+      // Render and recenter the view
+      orb.view.render(() => {
+        orb.view.recenter();
+        orb.view.setSettings({
+          simulation: {
+            isPhysicsEnabled: true,
+          },
+          render: {
+            contextAlphaOnEventIsEnabled: false,
+          },
+        });
+      });
+
+      
+      orb.events.on("render-end", (event) => {
+        console.log(`Render ended in ${event.durationMs} ms`);
+      });
+    }
+    
+    
+
+    getter("https://www.google.com");
+    getter("https://www.google.com/search?q=cats");
+    getter("https://www.google.com/search?q=dogs");
+    getter("https://www.wikipedia.com");
+  </script>
+</body>
+
+</html>
