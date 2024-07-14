@@ -205,7 +205,7 @@
         getterPromises.push(
           getter(data_copy[i].url).then(() => {
             completedCount++;
-            updateStatus(`Getting data... ${(100 / data_copy.length) * completedCount.toFixed(2)}% (${completedCount}/${data_copy.length})`);
+            updateStatus(`Getting data... ${((100 / data_copy.length) * completedCount).toFixed(2)}% (${completedCount}/${data_copy.length})`);
           })
         );
       }
