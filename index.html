@@ -28,18 +28,34 @@
       font-size: 14px;
       color: #555;
     }
+
+    #search-bar {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    #search-input {
+      width: 300px;
+      padding: 5px;
+      margin-right: 10px;
+    }
   </style>
 </head>
 
 <body>
   <div id="controls">
+    <div id="search-bar">
+      <input type="text" id="search-input" placeholder="Enter URL" />
+      <button onclick="search()">Search</button>
+    </div>
     <button onclick="deeper()">Go Deeper</button>
     <button onclick="render()">Render</button>
     <div id="status">Status: Ready</div>
   </div>
   <div id="graph"></div>
   <script>
-
     let data = [];
 
     function updateStatus(message) {
@@ -73,7 +89,7 @@
         }
       }
       console.log(data);
-      updateStatus(`Fetched links from ${root}`);
+      //updateStatus(`Fetched links from ${root}`);
     }
 
     async function getAllLinks(url) {
@@ -160,7 +176,7 @@
       updateStatus("Going deeper");
       let data_copy = JSON.parse(JSON.stringify(data));
       for (let i = 0; i < data_copy.length; i++) {
-        updateStatus("Getting data... "+((100/data_copy.length)*i).toFixed(2)+"% ("+i + "/" + data_copy.length+")");
+        updateStatus("Getting data... " + ((100 / data_copy.length) * i).toFixed(2) + "% (" + i + "/" + data_copy.length + ")");
         await getter(data[i].url);
       }
       updateStatus("Rendering");
@@ -168,9 +184,21 @@
       updateStatus("Done");
     };
 
+    async function search() {
+      let url = document.getElementById("search-input").value;
+      if (url) {
+        updateStatus("Searching for " + url);
+        await getter(url);
+        await render();
+        updateStatus("Ready");
+      } else {
+        updateStatus("Please enter a URL");
+      }
+    }
+
     async function load() {
       updateStatus("Loading initial data");
-      await getter("https://www.google.com/");
+      //await getter("https://www.google.com/");
       await render();
       updateStatus("Ready");
     }
