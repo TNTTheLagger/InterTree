@@ -52,11 +52,30 @@
     </div>
     <button onclick="deeper()">Go Deeper</button>
     <button onclick="render()">Render</button>
+    <div>
+      <label for="physics-toggle">Physics:</label>
+      <input type="checkbox" id="physics-toggle" onchange="togglePhysics()" checked>
+      <label for="context-alpha-toggle">Context Alpha:</label>
+      <input type="checkbox" id="context-alpha-toggle" onchange="toggleContextAlpha()" checked>
+    </div>
     <div id="status">Status: Ready</div>
   </div>
+
   <div id="graph"></div>
   <script>
     let data = [];
+    let physicsEnabled = true;
+    let contextAlphaEnabled = true;
+
+    function togglePhysics() {
+      physicsEnabled = !physicsEnabled;
+      render();
+    }
+
+    function toggleContextAlpha() {
+      contextAlphaEnabled = !contextAlphaEnabled;
+      render();
+    }
 
     function updateStatus(message) {
       document.getElementById("status").innerText = `Status: ${message}`;
@@ -158,18 +177,18 @@
       orb.view.render(() => {
         orb.view.setSettings({
           simulation: {
-            isPhysicsEnabled: true,
+            isPhysicsEnabled: physicsEnabled,
           },
           render: {
-            contextAlphaOnEventIsEnabled: true,
+            contextAlphaOnEventIsEnabled: contextAlphaEnabled,
           },
         });
-        orb.events.on("node-click", (event) => {
-          console.log("Event: node-click", event.node.data.url);
-          getter(event.node.data.url);
+          orb.events.on("node-click", (event) => {
+            console.log("Event: node-click", event.node.data.url);
+            getter(event.node.data.url);
         });
       });
-      updateStatus("Graph rendered");
+    updateStatus("Graph rendered");
     }
 
     async function deeper() {
