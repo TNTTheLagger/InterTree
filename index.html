@@ -25,14 +25,31 @@
 
     function getter(root) {
       getAllLinks(root).then(root_link => {
-        data.push({ id: data.length+1, name: root_link.title, root_url: root, url: root, connected_nodes: [] });
+        let test = data.filter(
+          function (data) { return data.url == root }
+        );
+        if (test.length == 0) {
+          data.push({ id: data.length + 1, name: root_link.title, root_url: root, url: root, connected_nodes: [] });
+        }
         for (let i = 0; i < root_link.links.length; i++) {
           let link = root_link.links[i];
-          data.push({ id: data[data.length - 1].id+1, name: link.title, url: link.href, connected_nodes: []});
-          let root_node = data.filter(
-            function (data) { return data.url == root }
+          let test = data.filter(
+            function (data) { return data.url == link.href }
           );
-          root_node[0].connected_nodes.push(data[data.length - 1].id);
+          if (test.length == 0) {
+            console.log("NEW NODE");
+            data.push({ id: data[data.length - 1].id + 1, name: link.title, url: link.href, connected_nodes: [] });
+            data.filter(
+              function (data) { return data.url == root }
+            )[0].connected_nodes.push(data[data.length - 1].id);
+          }else{
+            console.log("DUPLICATE NODE");
+            let duplicate_node = data.filter(
+              function (data) { return data.url == root }
+            );
+            console.log(duplicate_node[0]);
+            duplicate_node[0].connected_nodes.push(test[0].id);
+          };
         };
         console.log(data);
         render();
@@ -89,12 +106,16 @@
 
     // Example usage:
     //getAllLinks('https://www.google.com').then(links => console.log(links));
-
+    function removeDuplicates(arr) {
+      return Array.from(new Set(arr));
+    }
 
     async function render() {
       const container = document.getElementById("graph");
 
-
+      for (let i = 0; i < data.length; i++) {
+        data[i].connected_nodes = removeDuplicates(data[i].connected_nodes);
+      }
 
       const nodes = data.map(item => ({
         id: item.id,
@@ -114,6 +135,9 @@
         });
       });
 
+
+
+
       const orb = new Orb.Orb(container);
 
       // Initialize nodes and edges
@@ -121,29 +145,47 @@
 
       // Render and recenter the view
       orb.view.render(() => {
-        orb.view.recenter();
+        //orb.view.recenter();
         orb.view.setSettings({
           simulation: {
             isPhysicsEnabled: true,
           },
           render: {
-            contextAlphaOnEventIsEnabled: false,
+            contextAlphaOnEventIsEnabled: true,
           },
+        });
+        orb.events.on("node-click", (event) => {
+          console.log("Event: node-click", event.node.data.url);
+          getter(event.node.data.url);
+        });
+
+        orb.events.on("node-hover", (event) => {
+          //  console.log("Event: node-hover", event);
+        });
+
+        orb.events.on("edge-click", (event) => {
+          //  console.log("Event: edge-click", event);
         });
       });
 
-      
-      orb.events.on("render-end", (event) => {
-        console.log(`Render ended in ${event.durationMs} ms`);
-      });
-    }
-    
-    
 
-    getter("https://www.google.com");
-    getter("https://www.google.com/search?q=cats");
-    getter("https://www.google.com/search?q=dogs");
-    getter("https://www.wikipedia.com");
+      //orb.events.on("render-end", (event) => {
+      //  console.log(`Render ended in ${event.durationMs} ms`);
+      //});
+
+
+    }
+
+    async function deeper(){
+      
+    };
+
+
+    getter("https://www.google.com/");
+    //getter("https://www.google.com/search?q=cats");
+    //getter("https://www.google.com/search?q=dogs");
+    //getter("https://en.wikipedia.org/wiki/Polymorphism_(computer_science)");
+    deeper();
   </script>
 </body>
 
