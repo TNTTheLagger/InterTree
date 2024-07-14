@@ -160,7 +160,7 @@
       updateStatus("Going deeper");
       let data_copy = JSON.parse(JSON.stringify(data));
       for (let i = 0; i < data_copy.length; i++) {
-        updateStatus(i + "/" + data_copy.length);
+        updateStatus("Getting data... "+((100/data_copy.length)*i).toFixed(2)+"% ("+i + "/" + data_copy.length+")");
         await getter(data[i].url);
       }
       updateStatus("Rendering");
