@@ -183,25 +183,41 @@
             contextAlphaOnEventIsEnabled: contextAlphaEnabled,
           },
         });
-          orb.events.on("node-click", (event) => {
-            console.log("Event: node-click", event.node.data.url);
-            getter(event.node.data.url);
+        orb.events.on("node-click", (event) => {
+          console.log("Event: node-click", event.node.data.url);
+          getter(event.node.data.url);
         });
       });
-    updateStatus("Graph rendered");
+      updateStatus("Graph rendered");
     }
 
     async function deeper() {
       updateStatus("Going deeper");
+
       let data_copy = JSON.parse(JSON.stringify(data));
+      let getterPromises = [];
+      let completedCount = 0;
+
       for (let i = 0; i < data_copy.length; i++) {
-        updateStatus("Getting data... " + ((100 / data_copy.length) * i).toFixed(2) + "% (" + i + "/" + data_copy.length + ")");
-        await getter(data[i].url);
+        updateStatus(`Getting data... ${((100 / data_copy.length) * i).toFixed(2)}% (${i}/${data_copy.length})`);
+
+        // Assuming getter returns a promise, push each promise to the array
+        getterPromises.push(
+          getter(data_copy[i].url).then(() => {
+            completedCount++;
+            updateStatus(`Getting data... ${(100 / data_copy.length) * completedCount.toFixed(2)}% (${completedCount}/${data_copy.length})`);
+          })
+        );
       }
+
+      // Wait for all getter promises to complete
+      await Promise.all(getterPromises);
+
       updateStatus("Rendering");
       await render();
       updateStatus("Done");
-    };
+    }
+
 
     async function search() {
       let url = document.getElementById("search-input").value;
