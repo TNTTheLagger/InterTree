@@ -6,7 +6,7 @@ Just plug in a website eg.: ``https://www.google.com/`` and wach it make a mesh 
 ## How to use
 
 1. Download the project and run it with a php server (I tested it with xampp)
-2. In the top seach bar type in a full url to a site (eg.: ``https://www.google.com``) then press ``Search``
+2. In the top seach bar type in a full url to a site (eg.: ``https://www.google.com/``) then press ``Search``
 3. Once the initial web is made you can press ``Go Deeper`` to load more pages and go a layer deeper
    (WARNING: With each layer the number of websites loaded gets exponentially higher so you need a stopng PC)
 4. Enjoj!
